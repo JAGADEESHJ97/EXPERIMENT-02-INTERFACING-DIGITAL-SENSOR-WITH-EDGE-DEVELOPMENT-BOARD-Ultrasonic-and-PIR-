@@ -1,8 +1,8 @@
 # EXPERIMENT-02-INTERFACTING-DIGITAL-SENSOR-WITH-EDGE-DEVELOPMENT-BOARD-ULTRASONIC-AND-PIR-SENSOR-(RASPBERRYPI-PI4)
-### NAME 
-### DEPARTMENT 
-### ROLL NO 
-### DATE OF EXPERIMENT 
+### NAME : JAGADEESH J
+### DEPARTMENT : CSE(IoT)
+### ROLL NO : 212223110015
+### DATE OF EXPERIMENT : 28.4.26
 
 ### AIM
 To interface a digital sensor (Ultrasonic and PIR) with the Raspberry Pi 4 and control it using Python.
@@ -62,44 +62,155 @@ Connect the PIR sensor OUT to any one GPIO.
 Experiment 2A
 ## PROGRAM (Python)
 ```
+import RPi.GPIO as GPIO
+import time
+import requests
+
+# ThingSpeak settings
+API_KEY = "F7Z95XY5DAAM9B2P"
+THINGSPEAK_URL = "https://api.thingspeak.com/update"
+
+# GPIO pins
+TRIG = 23
+ECHO = 18
+
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(TRIG, GPIO.OUT)
+GPIO.setup(ECHO, GPIO.IN)
+
+def get_distance():
+    GPIO.output(TRIG, False)
+    time.sleep(0.5)
+
+    # Trigger pulse
+    GPIO.output(TRIG, True)
+    time.sleep(0.00001)
+    GPIO.output(TRIG, False)
+
+    while GPIO.input(ECHO) == 0:
+        pulse_start = time.time()
+
+    while GPIO.input(ECHO) == 1:
+        pulse_end = time.time()
+
+    pulse_duration = pulse_end - pulse_start
+    distance = pulse_duration * 17150
+    distance = round(distance, 2)
+
+    return distance
+
+try:
+    while True:
+        distance = get_distance()
+
+        # Console output
+        print("distance =", distance, "cm")
+
+        # Text message for ThingSpeak
+        status_text = f"distance = {distance} cm"
+
+        # Send data to ThingSpeak
+        payload = {
+            "api_key": API_KEY,
+            "field2": distance,   # numeric for chart
+            "status": status_text # text message
+        }
+
+        response = requests.get(THINGSPEAK_URL, params=payload)
+        print("Sent to ThingSpeak")
+
+        time.sleep(15)
+
+except KeyboardInterrupt:
+    GPIO.cleanup()
 
 
- 
-
-
-
- 
-````
+```
 
 ### OUPUT  
 Experiment 2A
 
-# FIGURE -04 ADD TITILE HERE 
+# FIGURE -04 KIT
+<img width="1010" height="1278" alt="image" src="https://github.com/user-attachments/assets/0326d358-1c79-453f-8a5c-c7f2a7486465" />
 
-#  FIGURE -05 ADD TITILE HERE 
 
-# FIGURE -06 ADD TITLE HERE 
+#  FIGURE -05 OUTPUT TERMINAL
+<img width="1600" height="813" alt="image" src="https://github.com/user-attachments/assets/105cb310-fa84-40fd-b81a-179c59b377aa" />
+
+
+
+
+# FIGURE -06 THINGSPEAK
+<img width="959" height="1076" alt="image" src="https://github.com/user-attachments/assets/39acee6b-9643-44a9-ba91-6192b4201620" />
+
+
 
 Experiment 2B
 ## PROGRAM (Python)
 ```
+import RPi.GPIO as GPIO
+import time
+import requests
 
+WRITE_API_KEY = "F7Z95XY5DAAM9B2P"
+URL = "https://api.thingspeak.com/update"
 
- 
+PIR_PIN = 24
 
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(PIR_PIN, GPIO.IN)
 
+print("PIR Monitoring Started...")
+time.sleep(2)
 
- 
+last_state = -1   # store previous state
+
+def update_thingspeak(state):
+    data = {
+        "api_key": WRITE_API_KEY,
+        "field2": state
+    }
+    try:
+        requests.get(URL, params=data)
+        print("Uploaded to ThingSpeak:", state)
+    except:
+        print("Upload Failed")
+
+while True:
+    motion = GPIO.input(PIR_PIN)
+
+    if motion != last_state:   # send only if changed
+        if motion == 1:
+            print("Motion Detected")
+            update_thingspeak(1)
+        else:
+            print("No Motion")
+            update_thingspeak(0)
+
+        last_state = motion
+        time.sleep(15)  # ThingSpeak delay
+
+    time.sleep(1)
+
+  
 ````
 
 ### OUPUT  
 Experiment 2B
 
-# FIGURE -07 ADD TITILE HERE 
+# FIGURE -07 KIT
+<img width="1280" height="720" alt="image" src="https://github.com/user-attachments/assets/389293ad-006f-44f7-b92d-e19db8ca730c" />
 
-#  FIGURE -08 ADD TITILE HERE 
 
-# FIGURE -09 ADD TITLE HERE 
+#  FIGURE -08 OUTPUT TERMINAL
+<img width="1918" height="1078" alt="image" src="https://github.com/user-attachments/assets/8552211e-a6ee-4006-a67b-46689adb6902" />
+
+
+# FIGURE -09 THINGSPEAK
+
+<img width="1907" height="977" alt="image" src="https://github.com/user-attachments/assets/036d831e-f3b7-45cd-a150-c3b43d28b8f8" />
+
+<img width="1914" height="971" alt="image" src="https://github.com/user-attachments/assets/c8e5f165-80bc-4a9d-9b48-72653e494776" />
 
  
 ## RESULTS
